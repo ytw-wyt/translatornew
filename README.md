@@ -61,6 +61,7 @@ Please merge the changes in `https://github.com/CMU-313/NodeBB-S24/tree/leo/draf
 git remote add upstream https://github.com/CMU-313/NodeBB-S24.git
 git fetch upstream
 git cherry-pick f385a392cfe26812a86b2c87729d561e5c3c9cd4
+
 ```
 
 The changes will call translator API when a new post
