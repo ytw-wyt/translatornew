@@ -81,3 +81,4 @@ To add environment variables to your GCP deployment, you can follow [this](https
 Once you have deployed the changes, you can test the translator service by creating a new post in NodeBB with non-English content `这是一条中文消息`.
 
 ![image](./assets/image.png)
+
