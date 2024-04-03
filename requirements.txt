@@ -2,9 +2,3 @@ Flask==3.0.0
 pytest==7.4.0
 google-cloud-aiplatform==1.46.0
 datasets==2.18.0
-vertexai
-mock
-google-auth
-sentence_transformers
-sklearn
-typing
