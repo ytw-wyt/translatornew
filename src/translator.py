@@ -1,8 +1,15 @@
 from vertexai.language_models import ChatModel, InputOutputTextPair
+from google.auth.credentials import Credentials
+from google.cloud import aiplatform
+from google.oauth2 import service_account
+#PROJECT_ID = "nodebb-416915"
 
-#PROJECT_ID = "nodebb-416915" 
+
+credentials = service_account.Credentials.from_service_account_file("privatekey.json")
+aiplatform.init(project = "translator-418717", credentials=credentials)
 
 chat_model = ChatModel.from_pretrained("chat-bison@001")
+
 
 def get_translation(post: str) -> str:
 
