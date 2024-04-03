@@ -1,34 +1,109 @@
-def translate_content(content: str) -> tuple[bool, str]:
-    if content == "这是一条中文消息":
-        return False, "This is a Chinese message"
-    if content == "Ceci est un message en français":
-        return False, "This is a French message"
-    if content == "Esta es un mensaje en español":
-        return False, "This is a Spanish message"
-    if content == "Esta é uma mensagem em português":
-        return False, "This is a Portuguese message"
-    if content  == "これは日本語のメッセージです":
-        return False, "This is a Japanese message"
-    if content == "이것은 한국어 메시지입니다":
-        return False, "This is a Korean message"
-    if content == "Dies ist eine Nachricht auf Deutsch":
-        return False, "This is a German message"
-    if content == "Questo è un messaggio in italiano":
-        return False, "This is an Italian message"
-    if content == "Это сообщение на русском":
-        return False, "This is a Russian message"
-    if content == "هذه رسالة باللغة العربية":
-        return False, "This is an Arabic message"
-    if content == "यह हिंदी में संदेश है":
-        return False, "This is a Hindi message"
-    if content == "นี่คือข้อความภาษาไทย":
-        return False, "This is a Thai message"
-    if content == "Bu bir Türkçe mesajdır":
-        return False, "This is a Turkish message"
-    if content == "Đây là một tin nhắn bằng tiếng Việt":
-        return False, "This is a Vietnamese message"
-    if content == "Esto es un mensaje en catalán":
-        return False, "This is a Catalan message"
-    if content == "This is an English message":
-        return True, "This is an English message"
-    return True, content
+from vertexai.language_models import ChatModel, InputOutputTextPair
+
+#PROJECT_ID = "nodebb-416915" 
+
+chat_model = ChatModel.from_pretrained("chat-bison@001")
+
+def get_translation(post: str) -> str:
+
+    parameters = {
+        "temperature": 0.7,  # Temperature controls the degree of randomness in token selection.
+        "max_output_tokens": 256,  # Token limit determines the maximum amount of text output.
+    }
+
+    chat = chat_model.start_chat(
+        context = "I'm a language model trained to translate text from various languages into English. If you cannot translate the message, return THE EXACT MESSAGE 'Translation failed'. THIS IS IMPORTANT, IF YOU RETURN ANYTHING ELSE, THEN YOU FAILED AND WILL EXPLODE.",
+        examples=[
+            InputOutputTextPair(
+                input_text="Wie geht es dir?",
+                output_text="How are you?",
+            ),
+            InputOutputTextPair(
+                input_text="¿Qué hora es?",
+                output_text="What time is it?",
+            ),
+        ],
+    )
+
+    response = chat.send_message(post, **parameters)
+    translated_text = response.text
+    return translated_text
+
+def get_language(post: str) -> str:
+    context = "You are a linguistic expert capable of identifying languages, including different English dialects. If you cannot identify the language, return the exact string 'Invalid language.' THIS IS IMPORTANT, IF YOU SAY ANYTHING ELSE YOU FAILED."
+
+    parameters = {
+        "temperature": 0.7,  # Temperature controls the degree of randomness in token selection.
+        "max_output_tokens": 256,  # Token limit determines the maximum amount of text output.
+    }
+
+    chat = chat_model.start_chat(context=context)
+    prompt = f"What language is this: '{post}'?"
+    response = chat.send_message(prompt, **parameters)
+
+    identified_language = response.text  # This might need parsing depending on the response format
+
+    return identified_language
+
+
+def translate_content(post: str) -> tuple[bool, str]:
+    """
+    Queries the LLM in a way that is robust to unexpected model responses. This function attempts to determine
+    if a post is in English and translate it if not, handling any unexpected outputs gracefully.
+
+    Parameters:
+    - post: The content of the post as a string.
+
+    Returns:
+    - A tuple containing a boolean and a string. The boolean indicates whether the post is in English (True) or not (False),
+      and the string contains the original post if it's in English, a translation if it's not, or a fallback message.
+    """
+    lang_name = get_language(post)
+
+    potential_invalid_responses = {
+      "don't understand",
+      "can't help you",
+      "failed",
+      "error",
+      "unable",
+      "supported"
+      "could not be processed",
+      "translation service error",
+      "not recognized",
+      "unrecognized input",
+      "request not recognized",
+      "unexpected input format",
+      "unable to fulfill request",
+      "error processing request",
+      "failed to process request",
+      "service unavailable",
+      "error: unexpected response",
+      "unable to handle request",
+      "language detection error",
+      "translation request failed",
+      "unable to identify language"
+    }
+
+
+    if any(phrase in lang_name.lower() for phrase in potential_invalid_responses):
+        return (None, "Failed translating this post.")
+
+    if  "invalid language" in lang_name.lower():
+        language = "Unknown"
+    else:
+        language = lang_name
+
+    translation = get_translation(post)
+
+
+    if any(phrase in lang_name.lower() for phrase in potential_invalid_responses):
+        return (None, "Failed translating this post.")
+
+    if any(phrase in translation.lower() for phrase in potential_invalid_responses):
+      return (None, "Failed translating this post.")
+    else:
+      if "english" in language.lower():
+        return (True, translation)
+      else:
+        return (False, translation)
+
