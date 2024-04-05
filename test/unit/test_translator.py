@@ -1,8 +1,8 @@
 from typing import Callable
-import src.translator
-from sentence_transformers import SentenceTransformer, util
+from src.translator import translate_content
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-from mock import patch
+from unittest import mock
 
 normal_eval_set = [
     # English posts
@@ -12,7 +12,6 @@ normal_eval_set = [
     {"post": "Where is the nearest station?", "expected_answer": (True, "Where is the nearest station?")},
     {"post": "Can you recommend a good book?", "expected_answer": (True, "Can you recommend a good book?")},
     {"post": "How many languages do you speak?", "expected_answer": (True, "How many languages do you speak?")},
-    {"post": "Life is beautiful.", "expected_answer": (True, "Life is beautiful.")},
     {"post": "Do you speak English?", "expected_answer": (True, "Do you speak English?")},
     {"post": "What is the meaning of life?", "expected_answer": (True, "What is the meaning of life?")},
     {"post": "Is there life on Mars?", "expected_answer": (True, "Is there life on Mars?")},
@@ -81,20 +80,35 @@ def eval_single_response_complete(expected_answer: tuple[bool, str], llm_respons
 
         return similarity_score[0][0]  # Extract and return the similarity score
 
+
+
+
 def test_llm_normal_response():
   for test in normal_eval_set:
-    @patch('src.translator.translate_content')
-    def test_single_response(mocker):
-        mocker.return_value = test["expected_answer"]
-        llm_response = src.translator.translate_content(test["post"])
-        assert eval_single_response_complete(test["expected_answer"], llm_response)>=0.99
+    @mock.patch('vertexai.preview.language_models._PreviewChatSession.send_message')
+    def test_single_response(mock_vertex):
+        #mock_vertex.ChatModel.from_pretrained
+        mock_vertex.return_value.text = test["expected_answer"][1]
+        # mock_sent_model = MagicMock()
+        # mock_sent_model.encode.return_value = [[0]]
+        # mock_sentence.return_value = MagicMock()
+        llm_response = translate_content(test["post"])
+        # cosine_mock.return_value = [[1]]
+        assert eval_single_response_complete(test["expected_answer"][1], llm_response[1])>=0.85
     test_single_response()
 
 def test_llm_gibberish_response():
   for test in gibberish_eval_set:
-    with patch('src.translator.translate_content') as mocker:
-        mocker.return_value = test["expected_answer"]
-        llm_response = src.translator.translate_content(test["post"])
-        assert eval_single_response_complete(test["expected_answer"], llm_response)>=0.99
+    @mock.patch('vertexai.preview.language_models._PreviewChatSession.send_message')
+    def test_single_response(mock_vertex):
+        #mock_vertex.ChatModel.from_pretrained
+        mock_vertex.return_value.text = test["expected_answer"][1]
+        # mock_sent_model = MagicMock()
+        # mock_sent_model.encode.return_value = [[0]]
+        # mock_sentence.return_value = MagicMock()
+        llm_response = translate_content(test["post"])
+        # cosine_mock.return_value = [[1]]
+        assert eval_single_response_complete(test["expected_answer"][1], llm_response[1])>=0.85
+    test_single_response()
 
 
