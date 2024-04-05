@@ -1,4 +1,4 @@
-from vertexai.language_models import ChatModel, InputOutputTextPair
+from vertexai.preview.language_models import ChatModel, InputOutputTextPair
 from google.auth.credentials import Credentials
 from google.cloud import aiplatform
 from google.oauth2 import service_account
@@ -71,7 +71,6 @@ def translate_content(post: str) -> tuple[bool, str]:
       "don't understand",
       "can't help you",
       "failed",
-      "error",
       "unable",
       "supported"
       "could not be processed",
